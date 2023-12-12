@@ -25,7 +25,7 @@ export default class ClusteredMapView extends PureComponent {
 
   constructor(props) {
     super(props)
-
+    console.log('props:   '   + props);
     this.state = {
       data: [], // helds renderable clusters and markers
       region: props.region || props.initialRegion, // helds current map region
@@ -37,6 +37,7 @@ export default class ClusteredMapView extends PureComponent {
     this.mapRef = this.mapRef.bind(this)
     this.onClusterPress = this.onClusterPress.bind(this)
     this.onRegionChangeComplete = this.onRegionChangeComplete.bind(this)
+    this.onLayout = this.onLayout.bind(this)
   }
 
   componentDidMount() {
@@ -94,6 +95,20 @@ export default class ClusteredMapView extends PureComponent {
     })
   }
 
+  onLayout() {
+    const listNew = [];
+    this.props.data.map((item, index) => {
+      listNew.push({
+        latitude: item.location.latitude,
+        longitude: item.location.longitude,
+      });
+    });
+    this.mapview.fitToCoordinates( listNew, {
+      edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+      animated: true,
+    });
+  };
+
   getClusters(region) {
     const bbox = regionToBoundingBox(region),
           viewport = (region.longitudeDelta) >= 40 ? { zoom: this.props.minZoom } : GeoViewport.viewport(bbox, this.dimensions)
@@ -132,7 +147,8 @@ export default class ClusteredMapView extends PureComponent {
         {...props}
         style={style}
         ref={this.mapRef}
-        onRegionChangeComplete={this.onRegionChangeComplete}>
+        onRegionChangeComplete={this.onRegionChangeComplete}
+        onLayout={this.onLayout}>
         {
           this.props.clusteringEnabled && this.state.data.map((d) => {
             if (d.properties.point_count === 0)
@@ -198,5 +214,6 @@ ClusteredMapView.propTypes = {
   edgePadding: PropTypes.object.isRequired,
   // string
   // mutiple
-  accessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
+  accessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  onLayout: PropTypes.func
 }
